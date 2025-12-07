@@ -1,20 +1,23 @@
 const express = require('express');
 
-
-const { getUser } = require('../controller/userController')
-const decorateHtmlRes = require('../middlewares/common/decorateHtmlRes')
 const imageUpload = require('../middlewares/userMiddleware/imageUploadMiddleware')
-const checkFromData = require('../middlewares/userMiddleware/checkFromData')
+const { getUser, ç, adduser } = require('../controller/userController');
+const decorateHtmlRes = require('../middlewares/common/decorateHtmlRes');
+const { checkFromData, formDataValidationHandler } = require('../middlewares/userMiddleware/validationFromData');
+
 const router = express.Router();
 
+// GET users
 router.get('/users', decorateHtmlRes('Users'), getUser);
 
-router.post('/uploader', imageUpload, checkFromData,(req, res) => {
-    res.json({
-        message: "Upload successful",
-        file: req.file,
-    });
-});
+// POST uploader with validation
+router.post(
+    '/uploader', imageUpload,
+    checkFromData,              // Validate
+    formDataValidationHandler,  // Handle validation result
+    adduser,
+
+);
+
 
 module.exports = router;
-
