@@ -83,7 +83,7 @@
     const formData = new FormData(this);
 
     try {
-      const res = await fetch('/users/add', {
+      const res = await fetch('/users', {
         method: 'POST',
         body: formData
       });
@@ -93,7 +93,24 @@
         alert('User added successfully!');
         this.reset();
         closeModal(new Event('click'));
-        location.reload(); // reload page to show new user
+        // Dynamically add new user to the table
+        const tbody = document.getElementById('users-body');
+        const newRow = document.createElement('tr');
+        newRow.id = `user-${result.user._id}`;
+        newRow.innerHTML = `
+          <td class="name">
+            <img src="/uploads/avatars/${result.user.avatar || 'default-user.png'}" 
+                 onerror="this.src='/images/default-user.png'" />
+            <span>${result.user.name}</span>
+          </td>
+          <td>${result.user.email}</td>
+          <td class="manage">
+            <button onclick="deleteUser('${result.user._id}')">
+              <img src="/images/trash.png" alt="Delete" />
+            </button>
+          </td>
+        `;
+        tbody.appendChild(newRow);
       } else {
         alert(result.message || 'Failed to add user');
       }
@@ -108,11 +125,12 @@
     if (!confirm('Are you sure you want to delete this user?')) return;
 
     try {
-      const res = await fetch(`/users/delete/${userId}`, { method: 'DELETE' });
+      const res = await fetch(`/users/${userId}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         alert('User deleted successfully!');
-        document.getElementById(`user-${userId}`).remove(); // remove row dynamically
+        const row = document.getElementById(`user-${userId}`);
+        if (row) row.remove(); // remove row dynamically
       } else {
         alert(result.message || 'Failed to delete user');
       }

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { getUser, adduser } = require("../controller/userController");
+const { getUser, adduser ,deleteUser} = require("../controller/userController");
 const imageUpload = require("../middlewares/userMiddleware/imageUploadMiddleware");
 const {
     checkFromData,
@@ -19,5 +19,5 @@ router.post(
     formDataValidationHandler,  // return validation errors
     adduser                     // finally save user
 );
-
+router.delete("/users/:id", deleteUser);
 module.exports = router;
