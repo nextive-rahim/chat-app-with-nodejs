@@ -14,12 +14,13 @@ async function getUser(req, res, next) {
 
 async function adduser(req, res, next) {
     try {
+        // Hash the password
         let hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-        let avatarFile = req.files && req.files.length > 0
-            ? req.files[0].filename
-            : null;
+        // Single file upload populates req.file
+        let avatarFile = req.file ? req.file.filename : null;
 
+        // Create new user
         let newUser = new User({
             ...req.body,
             avatar: avatarFile,
@@ -29,16 +30,20 @@ async function adduser(req, res, next) {
         await newUser.save();
 
         return res.status(200).json({
+            success: true,
             message: "User added successfully",
+            user: newUser, // send back for frontend
         });
 
     } catch (error) {
         return res.status(500).json({
+            success: false,
             message: "Server error",
             error: error.message,
         });
     }
 }
+
 // ----- DELETE USER -----
 async function deleteUser(req, res, next) {
     try {
@@ -48,20 +53,25 @@ async function deleteUser(req, res, next) {
         if (!deleted) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
-        if (deleted.avatar) {
-            const filePath = path.join(
-                __dirname,
-                "../../public/avatars",
-                deleted.avatar
-            );
 
-            fs.unlink(filePath, (err) => {
-                if (err) console.log("File delete failed:", err);
+        if (deleted.avatar) {
+            const filePath = path.join(__dirname, "../public/avatars", deleted.avatar);
+            fs.access(filePath, fs.constants.F_OK, (err) => {
+                if (!err) {
+                    fs.unlink(filePath, (err) => {
+                        if (err) console.log("File delete failed:", err);
+                        else console.log("Avatar deleted:", deleted.avatar);
+                    });
+                } else {
+                    console.log("Avatar file does not exist:", deleted.avatar);
+                }
             });
         }
+
         return res.status(200).json({ success: true, message: "User deleted successfully" });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
 }
+
 module.exports = { getUser, adduser, deleteUser };
