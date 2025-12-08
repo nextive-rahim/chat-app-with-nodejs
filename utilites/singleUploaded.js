@@ -17,17 +17,15 @@ function uploader(folderName, allowedTypes, fileSizeLimit, errorMessage) {
         },
 
         filename: (req, file, cb) => {
-            const ext = path.extname(file.originalname); // .png
-            const name =
-                file.originalname
-                    .replace(ext, "")
-                    .trim()
-                    .replace(/\s+/g, "-")
-                    .toLowerCase();
+            const ext = path.extname(file.originalname);
+            const name = file.originalname
+                .replace(ext, "")
+                .trim()
+                .replace(/\s+/g, "-")
+                .toLowerCase();
 
             const finalName = `${name}-${Date.now()}${ext}`;
-
-            cb(null, finalName); // ✔ never pass 3 args
+            cb(null, finalName);
         },
     });
 

@@ -1,41 +1,42 @@
-const bcript = require('bcrypt')
-const User=require('../models/people_model')
-function getUser(req, res, next) {
-    res.render('users', {
-        "title": res.locals.title
-    })
+const bcrypt = require("bcrypt");
+const User = require("../models/user_model");
+
+async function getUser(req, res, next) {
+  try {
+    const users = await User.find().lean(); 
+    res.render("users", { title: res.locals.title,users: users });
+  } catch (error) {
+    next(error);
+  }
 }
+
 
 async function adduser(req, res, next) {
-    let newUser;
-    const hasPassword = await bcript.hash(req.body.password, 10);
+  try {
+    let hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-    if (req.files && req.files.length > 0) {
-        newUser = new User({
-            ...req.body,
-            avatar: req.files[0].filename,
-            password: hasPassword,
-        })
-    } else {
-        newUser = new User({
-            ...req.body,
+    let avatarFile = req.files && req.files.length > 0
+      ? req.files[0].filename
+      : null;
 
-            password: hasPassword,
-        });
-    }
+    let newUser = new User({
+      ...req.body,
+      avatar: avatarFile,
+      password: hashedPassword,
+    });
 
-    try {
-        const result = await newUser.save();
-        res.status(200).json({ message: "User Added successfully" })
-    } catch (error) {
-        res.status(500).json({
-            errors: {
-                common: {
-                    mess: "unknown error occourced!"
-                }
-            }
-        })
-    }
+    await newUser.save();
+
+    return res.status(200).json({
+      message: "User added successfully",
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
 }
 
-module.exports = { getUser ,adduser};
+module.exports = { getUser, adduser };

@@ -1,18 +1,23 @@
-const uploader=require('../../utilites/singleUploaded')
+const uploader = require("../../utilites/singleUploaded");
 
 function imageUpload(req, res, next) {
-    const upload = uploader('avatars', ['image/jpeg', 'image/jpg', 'image/png'], 1000000, 'Only .jpeg .png, .jpg allow!');
+    const upload = uploader(
+        "avatars",
+        ["image/jpeg", "image/jpg", "image/png"],
+        1000000,
+        "Only .jpeg, .jpg, .png files are allowed!"
+    );
 
-
-    upload.any()(req, res, (err) => {
+    upload.single("avatar")(req, res, (err) => {
         if (err) {
-            res.status(500).json({
-                error: {
-                    avatar: err.message
-                }
-            })
+            return res.status(400).json({
+                errors: {
+                    avatar: err.message,
+                },
+            });
         }
         next();
-    })
+    });
 }
+
 module.exports = imageUpload;

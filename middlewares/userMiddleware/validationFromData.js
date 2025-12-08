@@ -1,55 +1,54 @@
-const { check } = require('express-validator')
-const { validationResult } = require('express-validator');
-const People = require('../../models/people_model')
-const creatError = require('http-errors')
-const { unlink } = require('fs');
-const path = require('path');
-const checkFromData =
-    [
-        check('name').isLength({ min: 2 }).withMessage('Name is required').isAlpha("en-US", { ignore: " -" }).withMessage('Alpabet numical symble not allow').trim(),
+const { check, validationResult } = require("express-validator");
+const People = require("../../models/user_model");
+const createError = require("http-errors");
+const fs = require("fs");
+const path = require("path");
 
-        check('email').isEmail().withMessage('Invalid Email').trim().custom(async (value) => {
-            try {
-                const user = await People.findOne({ email: value })
-                if (user) {
-                    throw creatError("Email already exist");
-                }
-            } catch (error) {
-                throw creatError(error.message)
-            }
+const checkFromData = [
+    check("name")
+        .isLength({ min: 2 })
+        .withMessage("Name must be at least 2 characters")
+        .isAlpha("en-US", { ignore: " -" })
+        .withMessage("Only alphabets allowed")
+        .trim(),
+
+    check("email")
+        .isEmail()
+        .withMessage("Invalid email format")
+        .custom(async (value) => {
+            const user = await People.findOne({ email: value });
+            if (user) throw createError("Email already exists");
         }),
 
-        check('password').isStrongPassword().withMessage('Password must be 8 digits ')
-    ]
+    check("password")
+        .isStrongPassword()
+        .withMessage("Password must be at least 8 characters and strong"),
+];
 
-/// Validation Result
-
-const formDataValidationHandler = function (req, res, next) {
+const formDataValidationHandler = (req, res, next) => {
     const errors = validationResult(req);
-    if (errors.isEmpty()) {
-        next();
-    }
-    // If validation fails
-    if (!errors.isEmpty()) {
-        if (req.files.length > 0) {
-            const { filename } = req.files[0];
-            unlink(path.join(__dirname, '../../public/avatars', filename), (err) => {
-                if (err) console.error("Failed to delete file:", err);
-            });
-        }
 
-        const formattedErrors = errors.array().map(err => ({
+    if (errors.isEmpty()) return next();
+
+    // delete uploaded file if validation fails
+    if (req.file) {
+        const filePath = path.join(
+            __dirname,
+            "../../public/avatars",
+            req.file.filename
+        );
+
+        fs.unlink(filePath, (err) => {
+            if (err) console.log("File delete failed:", err);
+        });
+    }
+
+    return res.status(400).json({
+        errors: errors.array().map((err) => ({
             field: err.path,
-            message: err.msg
-        }));
-
-        return res.status(400).json({ errors: formattedErrors });
-    }
-
-    // If validation successful
-    res.status(200).json({
-        message: "Upload successful",
-        file: req.file,
+            message: err.msg,
+        })),
     });
 };
-module.exports = { checkFromData, formDataValidationHandler }
+
+module.exports = { checkFromData, formDataValidationHandler };
