@@ -2,11 +2,11 @@ const express = require("express");
 const router = express.Router();
 
 const { getUser, adduser ,deleteUser} = require("../controller/userController");
-const imageUpload = require("../middlewares/userMiddleware/imageUploadMiddleware");
+const imageUpload = require("../middlewares/user/imageUploadMiddleware");
 const {
     checkFromData,
     formDataValidationHandler,
-} = require("../middlewares/userMiddleware/validationFromData");
+} = require("../middlewares/user/validationFromData");
 
 // show page
 router.get("/users", getUser);
