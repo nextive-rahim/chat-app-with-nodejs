@@ -1,4 +1,5 @@
 const express = require("express");
+const checkLogin=require('../middlewares/common/checkLogIn')
 const router = express.Router();
 
 const { getUser, adduser ,deleteUser} = require("../controller/userController");
@@ -9,11 +10,12 @@ const {
 } = require("../middlewares/user/validationFromData");
 
 // show page
-router.get("/users", getUser);
+router.get("/users",checkLogin, getUser);
 
 // add user
 router.post(
     "/users",
+    
     imageUpload,                // upload file first
     checkFromData,              // then validate all fields
     formDataValidationHandler,  // return validation errors
